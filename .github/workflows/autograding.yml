@@ -56,14 +56,6 @@ jobs:
             --json-report-file=visible_results.json \
             -v --tb=short
 
-      - name: Run Hidden Tests
-        if: always()
-        run: |
-          pytest tests/hidden/ \
-            --json-report \
-            --json-report-file=hidden_results.json \
-            -v --tb=short
-
       - name: Calculate Score
         if: always()
         run: |
@@ -72,8 +64,6 @@ jobs:
 
           visible_passed = 0
           visible_total = 0
-          hidden_passed = 0
-          hidden_total = 0
 
           try:
               with open('visible_results.json') as f:
@@ -83,42 +73,13 @@ jobs:
           except Exception:
               pass
 
-          try:
-              with open('hidden_results.json') as f:
-                  hr = json.load(f)
-              hidden_passed = hr['summary']['passed']
-              hidden_total = hr['summary']['total']
-          except Exception:
-              pass
-
-          visible_pct = (visible_passed / visible_total * 100) if visible_total > 0 else 0
-          hidden_pct = (hidden_passed / hidden_total * 100) if hidden_total > 0 else 0
-
-          # Weighted scoring: visible 40% + hidden 30% = 70 total points
-          visible_score = (visible_passed / visible_total * 40) if visible_total > 0 else 0
-          hidden_score = (hidden_passed / hidden_total * 30) if hidden_total > 0 else 0
-          total_score = visible_score + hidden_score
+          score = (visible_passed / visible_total * 40) if visible_total > 0 else 0
 
           print('## Lab 2: Control Flow - Test Results')
+          print(f'**Visible Test Score: {score:.1f}/40**')
+          print(f'Passed: {visible_passed}/{visible_total}')
           print()
-          print('### Visible Tests')
-          print(f'**Score: {visible_pct:.1f}%** ({visible_passed}/{visible_total} passed)')
-          print()
-          print('### Hidden Tests')
-          print(f'**Score: {hidden_pct:.1f}%** ({hidden_passed}/{hidden_total} passed)')
-          print()
-          print('### Overall')
-          print(f'**Total Score: {total_score:.1f} / 70**')
-          print(f'- Visible contribution: {visible_score:.1f} / 40')
-          print(f'- Hidden contribution: {hidden_score:.1f} / 30')
-          print()
-
-          if total_score >= 70:
-              print('All tests passed! Excellent work!')
-          elif total_score >= 50:
-              print('Good progress - review the failed tests.')
-          else:
-              print('Review the test output and check your code.')
+          print('*Hidden tests (30 points) will be graded separately after the deadline.*')
           " >> $GITHUB_STEP_SUMMARY
 
       - name: Upload Results
@@ -128,4 +89,3 @@ jobs:
           name: test-results
           path: |
             visible_results.json
-            hidden_results.json
